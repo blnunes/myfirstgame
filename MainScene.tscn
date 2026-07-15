@@ -1,256 +1,41 @@
-[gd_scene load_steps=7 format=3]
-[ext_resource type="Script" path="res://scripts/main_scene.gd" id="1_main"]
-[ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
-[ext_resource type="Script" path="res://scripts/player_accessories.gd" id="3_accessories"]
-[ext_resource type="Script" path="res://scripts/player_visual_controller.gd" id="4_visual_controller"]
-[ext_resource type="Script" path="res://scripts/player_shadow.gd" id="5_shadow"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
-size = Vector2(100, 100)
+[gd_scene load_steps=3 format=4.0]
+[ext_resource path="res://scripts/player.gd" type="Script" id=1]
 
 [node name="MainScene" type="Node2D"]
-script = ExtResource("1_main")
+
+[node name="Background" type="Node2D" parent="."]
+
+[node name="Ground" type="Polygon2D" parent="Background"]
+polygon = PackedVector2Array(0, 360, 640, 360, 640, 480, 0, 480)
+color = Color(0.15, 0.45, 0.1, 1)
+
+[node name="Sky" type="Polygon2D" parent="Background"]
+polygon = PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)
+color = Color(0.3, 0.7, 0.9, 1)
+
+[node name="Tree1" type="Polygon2D" parent="Background"]
+polygon = PackedVector2Array(120, 260, 90, 320, 150, 320)
+color = Color(0.06, 0.35, 0.0, 1)
+
+[node name="Tree2" type="Polygon2D" parent="Background"]
+polygon = PackedVector2Array(260, 220, 220, 300, 300, 300)
+color = Color(0.08, 0.42, 0.0, 1)
+
+[node name="Tree3" type="Polygon2D" parent="Background"]
+polygon = PackedVector2Array(440, 240, 400, 320, 480, 320)
+color = Color(0.07, 0.38, 0.0, 1)
 
 [node name="Player" type="CharacterBody2D" parent="."]
+script = ExtResource(1)
 position = Vector2(320, 260)
-script = ExtResource("1_player")
+
+[node name="Stickman" type="Line2D" parent="Player"]
+default_color = Color(1, 1, 1, 1)
+width = 4.0
+points = PackedVector2Array(0, -24, 0, -12, 0, 0, -8, 12, 0, 0, 8, 12, 0, 0, 0, -12)
+antialiased = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
-shape = SubResource("RectangleShape2D_player")
-
-[node name="Shadow" type="Node2D" parent="Player"]
-z_index = 9
-position = Vector2(0, 38)
-script = ExtResource("5_shadow")
-
-[node name="VisualRoot" type="Node2D" parent="Player"]
-z_index = 10
-script = ExtResource("4_visual_controller")
-
-[node name="DogSprite" type="AnimatedSprite2D" parent="Player/VisualRoot"]
-position = Vector2(0, -2)
-scale = Vector2(0.4, 0.4)
-
-[node name="Accessories" type="Node2D" parent="Player/VisualRoot"]
-z_index = 1
-script = ExtResource("3_accessories")
-
-[node name="Interface" type="CanvasLayer" parent="."]
-
-[node name="MarginContainer" type="MarginContainer" parent="Interface"]
-offset_left = 14.0
-offset_top = 14.0
-offset_right = 414.0
-offset_bottom = 88.0
-
-[node name="PanelContainer" type="PanelContainer" parent="Interface/MarginContainer"]
-layout_mode = 2
-
-[node name="Content" type="VBoxContainer" parent="Interface/MarginContainer/PanelContainer"]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="ScenarioLabel" type="Label" parent="Interface/MarginContainer/PanelContainer/Content"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.866667, 0.368627, 1)
-theme_override_font_sizes/font_size = 20
-text = "FOREST"
-
-[node name="InstructionLabel" type="Label" parent="Interface/MarginContainer/PanelContainer/Content"]
-layout_mode = 2
-text = "Find the special tree so the dog can pee."
-autowrap_mode = 2
-
-[node name="StatsLabel" type="Label" parent="Interface/MarginContainer/PanelContainer/Content"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.768627, 0.901961, 1, 1)
-text = "ALVOS 00/10    TEMPO 00:00.000"
-
-[node name="EndGameOverlay" type="ColorRect" parent="Interface"]
-visible = false
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.0352941, 0.0470588, 0.101961, 0.92)
-
-[node name="ResultsPanel" type="PanelContainer" parent="Interface/EndGameOverlay"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -225.0
-offset_right = 220.0
-offset_bottom = 225.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ResultsContent" type="VBoxContainer" parent="Interface/EndGameOverlay/ResultsPanel"]
-layout_mode = 2
-theme_override_constants/separation = 5
-alignment = 1
-
-[node name="GameOverLabel" type="Label" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.866667, 0.368627, 1)
-theme_override_font_sizes/font_size = 28
-text = "FIM DE JOGO"
-horizontal_alignment = 1
-
-[node name="FinalTimeLabel" type="Label" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "TEMPO: 00:00.000"
-horizontal_alignment = 1
-
-[node name="QualificationLabel" type="Label" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent"]
-layout_mode = 2
-text = "TOP 10! DIGITE 3 INICIAIS"
-horizontal_alignment = 1
-
-[node name="InitialsRow" type="HBoxContainer" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent"]
-layout_mode = 2
-alignment = 1
-
-[node name="InitialsPrompt" type="Label" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent/InitialsRow"]
-layout_mode = 2
-text = "INICIAIS"
-
-[node name="InitialsInput" type="LineEdit" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent/InitialsRow"]
-custom_minimum_size = Vector2(92, 0)
-layout_mode = 2
-placeholder_text = "AAA"
-alignment = 1
-
-[node name="SubmitButton" type="Button" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent/InitialsRow"]
-layout_mode = 2
-disabled = true
-text = "SALVAR"
-
-[node name="ValidationLabel" type="Label" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.713726, 0.858824, 0.921569, 1)
-text = "Somente letras A-Z."
-horizontal_alignment = 1
-
-[node name="LeaderboardLabel" type="Label" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "TOP 10\nAinda nao existem resultados."
-horizontal_alignment = 1
-
-[node name="RestartButton" type="Button" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent"]
-layout_mode = 2
-text = "VOLTAR AO INICIO"
-
-[node name="StartOverlay" type="ColorRect" parent="Interface"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.0352941, 0.109804, 0.137255, 1)
-
-[node name="AccentTop" type="ColorRect" parent="Interface/StartOverlay"]
-layout_mode = 0
-anchor_right = 1.0
-offset_bottom = 8.0
-grow_horizontal = 2
-color = Color(0.988235, 0.729412, 0.247059, 1)
-
-[node name="StartPanel" type="PanelContainer" parent="Interface/StartOverlay"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -245.0
-offset_top = -215.0
-offset_right = 245.0
-offset_bottom = 215.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="StartMargin" type="MarginContainer" parent="Interface/StartOverlay/StartPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 18
-
-[node name="StartContent" type="VBoxContainer" parent="Interface/StartOverlay/StartPanel/StartMargin"]
-layout_mode = 2
-theme_override_constants/separation = 7
-alignment = 1
-
-[node name="TitleLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.866667, 0.368627, 1)
-theme_override_font_sizes/font_size = 34
-text = "Where can Bruce pee?"
-horizontal_alignment = 1
-
-[node name="SubtitleLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.741176, 0.898039, 0.929412, 1)
-theme_override_font_sizes/font_size = 15
-text = "A tiny arcade adventure"
-horizontal_alignment = 1
-
-[node name="SkinSelector" type="HBoxContainer" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
-custom_minimum_size = Vector2(0, 170)
-layout_mode = 2
-alignment = 1
-
-[node name="PreviousSkinButton" type="Button" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector"]
-custom_minimum_size = Vector2(46, 46)
-layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = "<"
-
-[node name="BruceFrame" type="CenterContainer" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector"]
-custom_minimum_size = Vector2(190, 170)
-layout_mode = 2
-
-[node name="BruceImage" type="TextureRect" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector/BruceFrame"]
-custom_minimum_size = Vector2(170, 170)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NextSkinButton" type="Button" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector"]
-custom_minimum_size = Vector2(46, 46)
-layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = ">"
-
-[node name="SkinNameLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.866667, 0.368627, 1)
-theme_override_font_sizes/font_size = 18
-text = "MIDNIGHT"
-horizontal_alignment = 1
-
-[node name="TaglineLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
-layout_mode = 2
-text = "Find the perfect spot in 10 different stops!"
-horizontal_alignment = 1
-
-[node name="PlayButton" type="Button" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
-custom_minimum_size = Vector2(180, 48)
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 24
-text = "PLAY"
-
-[node name="ControlsLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.690196, 0.756863, 0.788235, 1)
-theme_override_font_sizes/font_size = 13
-text = "Arrow keys: choose a dog"
-horizontal_alignment = 1
+shape = RectangleShape2D {
+    extents = Vector2(10, 28)
+}

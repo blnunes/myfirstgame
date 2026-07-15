@@ -34,8 +34,7 @@ myfirstgame/
 │   ├── dog.png
 │   ├── dog_source.png
 │   └── dog/spritesheets/
-│       ├── dog_walk_v1.png             # skin GOLDEN
-│       ├── dog_walk_v2.png             # MIDNIGHT anterior, preservada
+│       ├── dog_walk_golden.png         # skin GOLDEN ativa, fornecida pelo usuário
 │       └── dog_walk_midnight_v3.png    # skin MIDNIGHT ativa
 └── scripts/
     ├── main_scene.gd
@@ -239,12 +238,16 @@ Novas aparências contextuais devem ficar nesse componente ou em componentes irm
 
 As duas skins são jogáveis e usam sheets RGBA de `1252 x 1252`, em grade exata `4 x 4` com células `313 x 313`. `player.gd::_load_dog_animations()` carrega o caminho da skin como `Texture2D`, cria `AtlasTexture` para cada frame e monta `SpriteFrames` em runtime.
 
+O diretório de spritesheets contém somente as duas versões ativas. Versões intermediárias antigas foram removidas para evitar assets órfãos e importações desnecessárias; o histórico continua disponível no Git quando aplicável.
+
 - `MIDNIGHT`: `dog_walk_midnight_v3.png`, cão preto/cinza em pixel art, linha lateral direita `1`;
-- `GOLDEN`: `dog_walk_v1.png`, cão dourado ilustrado, linha lateral direita `1`.
+- `GOLDEN`: `dog_walk_golden.png`, cão dourado ilustrado, linha lateral direita `1`.
 
 Ambos usam linha frontal `0` e traseira `3`. `PlayerSkin.animation_rows` resolve a diferença lateral; não volte a usar uma constante global de linhas. A lateral direita é espelhada com `flip_h` para produzir a esquerda.
 
 Na `MIDNIGHT` v3, cada direção segue quatro fases: contato A, passagem A, contato B oposto e passagem B. Nas laterais, a pata dianteira próxima lidera no contato A e recolhe enquanto a distante lidera no contato B; as traseiras fazem a oposição diagonal. Na linha traseira, a perna longa alterna explicitamente entre os lados. A linha frontal também alterna os contatos, mas preserva a leitura da versão anterior.
+
+A `GOLDEN` deriva do arquivo explicitamente fornecido pelo usuário em `/Users/brunonunes/Downloads/User attachment.png`. A edição preservou o desenho, a paleta, a ordem e as direções das 16 poses, removeu o quadriculado claro incorporado ao RGB, completou os trechos cortados na última linha e realinhou os quadros sobre transparência real. Um pixel de cada borda foi recortado para converter `1254 x 1254` em uma grade exata `1252 x 1252`. As quatro linhas permanecem organizadas como frente, direita, esquerda e costas. O jogo usa a linha direita `1` e aplica `flip_h` para andar à esquerda; a linha esquerda `2` permanece armazenada como referência no sheet. O nome estável `dog_walk_golden.png` evita criar novas versões intermediárias no repositório.
 
 As animações usam `8 FPS`, ajustados em runtime entre `72%` e `118%` conforme a velocidade. As vistas frontal e traseira usam escala `0,4`; a lateral usa `0,47` para compensar a ocupação dentro da célula.
 
@@ -320,14 +323,13 @@ O segundo comando, o smoke test direcional e o teste do fluxo da capa já execut
 
 Não considere esse aviso como erro de parse. Um aviso de `Image.load_from_file()` no caminho normal indica que o sheet falhou e o fallback estático foi usado; investigue o importador. Qualquer backtrace GDScript, erro de nó inexistente, falha em `assert` ou exit code diferente de `0` também precisa ser investigado. Sem `HOME` temporário, o Godot pode falhar ao criar `user://logs` ou tentar gravar settings fora do sandbox.
 
-O headless de três frames valida carregamento e `_ready()`, mas agora permanece corretamente na tela inicial. `start_screen_smoke_test.gd` cobre bloqueio inicial, troca por seta, aplicação de `GOLDEN`, sua linha lateral, `PLAY`, salvamento e retorno à capa. Ele não cobre visualmente o layout, troca de cenário nem as dez aproximações reais; mantenha o checklist manual.
+O headless de três frames valida carregamento e `_ready()`, mas agora permanece corretamente na tela inicial. `start_screen_smoke_test.gd` cobre bloqueio inicial, troca por seta, aplicação de `GOLDEN`, suas linhas lateral/frontal/traseira, dimensões da grade, transparência dos cantos, frames distintos e cobertura plausível dos 16 desenhos, `PLAY`, salvamento e retorno à capa. Ele não cobre visualmente o layout, troca de cenário nem as dez aproximações reais; mantenha o checklist manual.
 
 ## Problemas conhecidos e dívida técnica
 
 - O fallback manual de `dog.png` não é seguro para export; o fluxo principal com os dois sheets usa o importador normal e deve ser incluído em testes de export.
 - Os sheets têm quatro frames por direção, não possuem diagonais dedicadas e usam espelhamento na lateral esquerda. O código escolhe a direção dominante para movimentos diagonais.
-- `GOLDEN` ainda usa o sheet original `dog_walk_v1.png`, cuja alternância de patas é menos pronunciada. A correção anatômica deste turno foi aplicada somente à `MIDNIGHT`, por solicitação explícita; trate `GOLDEN` separadamente em trabalho futuro.
-- `tests/dog_animation_smoke_test.gd` cobre seleção direcional, avanço de frame, flip e preservação da fase da passada no idle/troca de direção; `tests/start_screen_smoke_test.gd` cobre seletor por teclado, aplicação de `GOLDEN`, sua linha lateral, `PLAY`, um salvamento controlado e retorno à capa. Ainda não existem testes automatizados completos para seleção de cenários, distância/spawn ou todos os casos de `LeaderboardStore`.
+- `tests/dog_animation_smoke_test.gd` cobre seleção direcional, avanço de frame, flip e preservação da fase da passada no idle/troca de direção; `tests/start_screen_smoke_test.gd` cobre seletor por teclado, aplicação de `GOLDEN`, linhas lateral/frontal/traseira, integridade e transparência do sheet fornecido pelo usuário, `PLAY`, um salvamento controlado e retorno à capa. Ainda não existem testes automatizados completos para seleção de cenários, distância/spawn ou todos os casos de `LeaderboardStore`.
 - O áudio e todos os cenários são desenhados ou sintetizados por código; crescer o mapa pode justificar cenas reutilizáveis, Resources de configuração ou TileMap.
 - A interface mistura textos em inglês dos cenários com textos em português no HUD e na tela final.
 - Não existe opção na UI para limpar o Top 10.

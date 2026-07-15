@@ -18,7 +18,7 @@ static func create_skins() -> Array[PlayerSkin]:
         PlayerSkin.new(
             &"golden",
             "GOLDEN",
-            "res://assets/characters/dog/spritesheets/dog_walk_v1.png",
+            "res://assets/characters/dog/spritesheets/dog_walk_golden.png",
             {
                 "walk_down": 0,
                 "walk_side": 1,

@@ -48,6 +48,7 @@ func _run() -> void:
     Input.parse_input_event(select_next_skin)
     assert(skin_name_label.text == "GOLDEN")
     assert(skin_preview.texture is AtlasTexture)
+    _assert_golden_sheet_integrity()
     print("OK arrow key selects GOLDEN skin")
 
     play_button.pressed.emit()
@@ -60,20 +61,10 @@ func _run() -> void:
     assert(player.call("get_active_skin_id") == &"golden")
     print("OK PLAY starts gameplay")
 
-    Input.action_press("ui_right")
-    for _frame in 18:
-        await physics_frame
-        await process_frame
-    var dog_sprite := player.get_node("VisualRoot/DogSprite") as AnimatedSprite2D
-    assert(dog_sprite.animation == &"walk_side")
-    var golden_side_frame := dog_sprite.sprite_frames.get_frame_texture(
-        &"walk_side",
-        dog_sprite.frame
-    ) as AtlasTexture
-    assert(golden_side_frame != null)
-    assert(golden_side_frame.region.position.y == golden_side_frame.region.size.y)
-    Input.action_release("ui_right")
-    print("OK GOLDEN skin uses its own side-animation row")
+    await _move_golden_and_verify(player, &"ui_right", &"walk_side", 1)
+    await _move_golden_and_verify(player, &"ui_down", &"walk_down", 0)
+    await _move_golden_and_verify(player, &"ui_up", &"walk_up", 3)
+    print("OK GOLDEN skin uses corrected horizontal and vertical rows")
 
     main_scene.set("game_running", false)
     main_scene.set("final_time_seconds", 12.345)
@@ -98,3 +89,67 @@ func _run() -> void:
     assert(skin_name_label.text == "MIDNIGHT")
     print("OK on-screen selector button changes skin")
     quit()
+
+
+func _move_golden_and_verify(
+    player: CharacterBody2D,
+    action: StringName,
+    expected_animation: StringName,
+    expected_row: int
+) -> void:
+    Input.action_press(action)
+    for _frame in 18:
+        await physics_frame
+        await process_frame
+
+    var dog_sprite := player.get_node("VisualRoot/DogSprite") as AnimatedSprite2D
+    assert(dog_sprite.animation == expected_animation)
+    assert(dog_sprite.is_playing())
+    var frame_texture := dog_sprite.sprite_frames.get_frame_texture(
+        expected_animation,
+        dog_sprite.frame
+    ) as AtlasTexture
+    assert(frame_texture != null)
+    assert(frame_texture.region.position.y == expected_row * frame_texture.region.size.y)
+    assert(frame_texture.atlas.resource_path.ends_with("dog_walk_golden.png"))
+
+    Input.action_release(action)
+    for _frame in 16:
+        await physics_frame
+        await process_frame
+
+
+func _assert_golden_sheet_integrity() -> void:
+    const SHEET_PATH := "res://assets/characters/dog/spritesheets/dog_walk_golden.png"
+    const CELL_SIZE := 313
+    var sheet := Image.new()
+    var png_data := FileAccess.get_file_as_bytes(SHEET_PATH)
+    assert(not png_data.is_empty())
+    assert(sheet.load_png_from_buffer(png_data) == OK)
+    assert(sheet.get_size() == Vector2i(4 * CELL_SIZE, 4 * CELL_SIZE))
+
+    for row in range(4):
+        var frame_hashes: Dictionary = {}
+        for column in range(4):
+            var frame := sheet.get_region(
+                Rect2i(column * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            )
+            assert(frame.get_pixel(0, 0).a < 0.05)
+            assert(frame.get_pixel(CELL_SIZE - 1, 0).a < 0.05)
+            assert(frame.get_pixel(0, CELL_SIZE - 1).a < 0.05)
+            assert(frame.get_pixel(CELL_SIZE - 1, CELL_SIZE - 1).a < 0.05)
+            var visible_pixels := _visible_pixel_count(frame)
+            assert(visible_pixels > 15000)
+            assert(visible_pixels < 30000)
+            frame_hashes[hash(frame.get_data())] = true
+        assert(frame_hashes.size() == 4)
+    print("OK GOLDEN source sheet has transparent, distinct and complete frames")
+
+
+func _visible_pixel_count(image: Image) -> int:
+    var count := 0
+    for y in range(image.get_height()):
+        for x in range(image.get_width()):
+            if image.get_pixel(x, y).a > 0.25:
+                count += 1
+    return count
