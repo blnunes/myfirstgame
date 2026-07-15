@@ -1,0 +1,8 @@
+# Godot generated cache
+.godot/
+
+# Local editor configuration contains machine-specific paths
+.vscode/
+
+# Operating system metadata
+.DS_Store
