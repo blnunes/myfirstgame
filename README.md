@@ -9,7 +9,7 @@ A small top-down game prototype for Godot 4.7. Move the dog through Forest, City
 - Desert: find the cactus.
 - Space: wear a helmet and find the meteor.
 
-Touching the target plays a short effect, moves the target to a new random tile, and switches to a different random scenario. All graphics and audio are generated in code except for the dog PNG.
+Touching the target plays a short effect, moves the target to a new random tile, and switches to a different random scenario. All graphics and audio are generated in code except for the dog sprite sheets.
 
 A game lasts for 10 targets. The final time can enter a persistent Top 10 leaderboard. Qualifying players register exactly three arcade-style initials using only the letters `A-Z`; numbers, accents, spaces, and symbols are rejected.
 
@@ -21,6 +21,6 @@ A game lasts for 10 targets. The final time can enter a persistent Top 10 leader
 
 Use the arrow keys to move. See `AGENTS.md` for architecture, extension guidance, and the manual validation checklist.
 
-The dog uses a generated four-direction pixel-art sprite sheet based on a black, fluffy spitz character, with real leg and body walk cycles. Smooth acceleration, subtle procedural bob, tilt, squash and stretch, direction flipping, and a responsive ground shadow polish the animation. No external animation software is required for the current version.
+The title screen lets the player choose between the black pixel-art **MIDNIGHT** skin and the original golden **GOLDEN** dog using the left/right arrow keys or the on-screen buttons. Both skins have four-direction leg and body walk cycles. Smooth acceleration, subtle procedural bob, tilt, squash and stretch, direction flipping, and a responsive ground shadow polish the animation.
 
 The game opens on the **Where can Bruce pee?** title screen. Gameplay and the timer begin only after pressing **PLAY**. Saving a Top 10 score returns the player to the title screen.

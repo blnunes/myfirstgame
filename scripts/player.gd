@@ -1,12 +1,6 @@
 extends CharacterBody2D
 
-const WALK_SHEET_PATH := "res://assets/characters/dog/spritesheets/dog_walk_v2.png"
 const FALLBACK_DOG_PATH := "res://assets/characters/dog.png"
-const WALK_ANIMATION_ROWS := {
-    "walk_down": 0,
-    "walk_side": 2,
-    "walk_up": 3,
-}
 const WALK_FRAME_COLUMNS := 4
 const WALK_FRAME_ROWS := 4
 
@@ -21,11 +15,12 @@ const WALK_FRAME_ROWS := 4
 @onready var visual_controller: PlayerVisualController = $VisualRoot
 
 var movement_enabled := true
+var active_skin: PlayerSkin
 
 
 func _ready() -> void:
     add_to_group("player")
-    _load_dog_animations()
+    set_skin(PlayerSkinCatalog.create_skins()[0])
 
 
 func _physics_process(delta: float) -> void:
@@ -64,10 +59,24 @@ func play_pee_effect(target_position: Vector2) -> void:
     accessories.play_pee_effect(target_position)
 
 
+func set_skin(skin: PlayerSkin) -> void:
+    active_skin = skin
+    _load_dog_animations()
+
+
+func get_active_skin_id() -> StringName:
+    return active_skin.id if active_skin != null else &""
+
+
 func _load_dog_animations() -> void:
-    var sheet_texture := load(WALK_SHEET_PATH) as Texture2D
+    if active_skin == null:
+        push_error("Nenhuma skin foi configurada para o jogador.")
+        _load_static_fallback()
+        return
+
+    var sheet_texture := load(active_skin.texture_path) as Texture2D
     if sheet_texture == null:
-        push_warning("Sprite sheet do cao indisponivel; usando imagem estatica.")
+        push_warning("Sprite sheet da skin %s indisponivel; usando imagem estatica." % active_skin.id)
         _load_static_fallback()
         return
 
@@ -83,12 +92,12 @@ func _load_dog_animations() -> void:
     var sprite_frames := SpriteFrames.new()
     sprite_frames.remove_animation("default")
 
-    for animation_name: String in WALK_ANIMATION_ROWS:
+    for animation_name: String in active_skin.animation_rows:
         sprite_frames.add_animation(animation_name)
         sprite_frames.set_animation_loop(animation_name, true)
         sprite_frames.set_animation_speed(animation_name, 8.0)
 
-        var row: int = WALK_ANIMATION_ROWS[animation_name]
+        var row: int = active_skin.animation_rows[animation_name]
         for frame_index in WALK_FRAME_COLUMNS:
             var atlas_frame := AtlasTexture.new()
             atlas_frame.atlas = sheet_texture
@@ -103,6 +112,8 @@ func _load_dog_animations() -> void:
     dog_sprite.sprite_frames = sprite_frames
     dog_sprite.animation = "walk_down"
     dog_sprite.frame = 0
+    dog_sprite.flip_h = false
+    dog_sprite.speed_scale = 1.0
 
 
 func _load_static_fallback() -> void:

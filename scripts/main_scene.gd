@@ -25,6 +25,10 @@ const TRANSITIONS_TO_WIN := 10
 @onready var restart_button: Button = $Interface/EndGameOverlay/ResultsPanel/ResultsContent/RestartButton
 @onready var start_overlay: ColorRect = $Interface/StartOverlay
 @onready var play_button: Button = $Interface/StartOverlay/StartPanel/StartMargin/StartContent/PlayButton
+@onready var previous_skin_button: Button = $Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector/PreviousSkinButton
+@onready var next_skin_button: Button = $Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector/NextSkinButton
+@onready var skin_preview: TextureRect = $Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector/BruceFrame/BruceImage
+@onready var skin_name_label: Label = $Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinNameLabel
 
 var current_scenario: BaseScenario
 var current_scenario_index := 0
@@ -37,10 +41,13 @@ var session_start_msec := 0
 var final_time_seconds := 0.0
 var game_running := false
 var is_changing_scenario := false
+var available_skins: Array[PlayerSkin] = []
+var selected_skin_index := 0
 
 
 func _ready() -> void:
     random.randomize()
+    available_skins = PlayerSkinCatalog.create_skins()
     _create_interaction_sound()
     leaderboard_store.load_entries()
     initials_input.text_changed.connect(_on_initials_text_changed)
@@ -48,7 +55,21 @@ func _ready() -> void:
     submit_score_button.pressed.connect(_submit_score)
     restart_button.pressed.connect(_show_start_screen)
     play_button.pressed.connect(_start_new_game)
+    previous_skin_button.pressed.connect(_select_previous_skin)
+    next_skin_button.pressed.connect(_select_next_skin)
+    _update_skin_selection()
     _show_start_screen()
+
+
+func _input(event: InputEvent) -> void:
+    if not is_node_ready() or not start_overlay.visible:
+        return
+    if event.is_action_pressed("ui_left"):
+        _select_previous_skin()
+        get_viewport().set_input_as_handled()
+    elif event.is_action_pressed("ui_right"):
+        _select_next_skin()
+        get_viewport().set_input_as_handled()
 
 
 func _process(_delta: float) -> void:
@@ -68,6 +89,7 @@ func _start_new_game() -> void:
     player.show()
     initials_input.release_focus()
     initials_input.text = ""
+    player.set_skin(available_skins[selected_skin_index])
     player.set_movement_enabled(true)
     _load_scenario(0)
     session_start_msec = Time.get_ticks_msec()
@@ -85,6 +107,53 @@ func _show_start_screen() -> void:
     initials_input.release_focus()
     start_overlay.show()
     play_button.grab_focus()
+
+
+func _select_previous_skin() -> void:
+    _change_selected_skin(-1)
+
+
+func _select_next_skin() -> void:
+    _change_selected_skin(1)
+
+
+func _change_selected_skin(direction: int) -> void:
+    if available_skins.is_empty():
+        return
+    selected_skin_index = posmod(selected_skin_index + direction, available_skins.size())
+    _update_skin_selection()
+
+
+func _update_skin_selection() -> void:
+    if available_skins.is_empty():
+        skin_name_label.text = "NO SKINS"
+        skin_preview.texture = null
+        play_button.disabled = true
+        return
+
+    play_button.disabled = false
+    var selected_skin := available_skins[selected_skin_index]
+    skin_name_label.text = selected_skin.display_name
+    var sheet_texture := load(selected_skin.texture_path) as Texture2D
+    if sheet_texture == null:
+        skin_preview.texture = null
+        play_button.disabled = true
+        push_error("Nao foi possivel carregar a capa da skin %s." % selected_skin.id)
+        return
+
+    var frame_size := Vector2i(
+        sheet_texture.get_width() / 4,
+        sheet_texture.get_height() / 4
+    )
+    var preview_texture := AtlasTexture.new()
+    preview_texture.atlas = sheet_texture
+    preview_texture.region = Rect2i(
+        selected_skin.cover_frame.x * frame_size.x,
+        selected_skin.cover_frame.y * frame_size.y,
+        frame_size.x,
+        frame_size.y
+    )
+    skin_preview.texture = preview_texture
 
 
 func _load_scenario(scenario_index: int) -> void:

@@ -1,17 +1,12 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=7 format=3]
 [ext_resource type="Script" path="res://scripts/main_scene.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/player_accessories.gd" id="3_accessories"]
 [ext_resource type="Script" path="res://scripts/player_visual_controller.gd" id="4_visual_controller"]
 [ext_resource type="Script" path="res://scripts/player_shadow.gd" id="5_shadow"]
-[ext_resource type="Texture2D" path="res://assets/characters/dog/spritesheets/dog_walk_v2.png" id="6_bruce_sheet"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(100, 100)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_bruce_cover"]
-atlas = ExtResource("6_bruce_sheet")
-region = Rect2(0, 0, 313, 313)
 
 [node name="MainScene" type="Node2D"]
 script = ExtResource("1_main")
@@ -207,16 +202,39 @@ theme_override_font_sizes/font_size = 15
 text = "A tiny arcade adventure"
 horizontal_alignment = 1
 
-[node name="BruceFrame" type="CenterContainer" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
-custom_minimum_size = Vector2(0, 205)
+[node name="SkinSelector" type="HBoxContainer" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
+custom_minimum_size = Vector2(0, 170)
+layout_mode = 2
+alignment = 1
+
+[node name="PreviousSkinButton" type="Button" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector"]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "<"
+
+[node name="BruceFrame" type="CenterContainer" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector"]
+custom_minimum_size = Vector2(190, 170)
 layout_mode = 2
 
-[node name="BruceImage" type="TextureRect" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/BruceFrame"]
-custom_minimum_size = Vector2(205, 205)
+[node name="BruceImage" type="TextureRect" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector/BruceFrame"]
+custom_minimum_size = Vector2(170, 170)
 layout_mode = 2
-texture = SubResource("AtlasTexture_bruce_cover")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="NextSkinButton" type="Button" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/SkinSelector"]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = ">"
+
+[node name="SkinNameLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.866667, 0.368627, 1)
+theme_override_font_sizes/font_size = 18
+text = "MIDNIGHT"
+horizontal_alignment = 1
 
 [node name="TaglineLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
 layout_mode = 2
@@ -234,5 +252,5 @@ text = "PLAY"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.690196, 0.756863, 0.788235, 1)
 theme_override_font_sizes/font_size = 13
-text = "Use the arrow keys to move"
+text = "Arrow keys: choose a dog"
 horizontal_alignment = 1
