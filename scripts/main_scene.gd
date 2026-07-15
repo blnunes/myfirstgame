@@ -13,6 +13,7 @@ const TRANSITIONS_TO_WIN := 10
 @onready var scenario_label: Label = $Interface/MarginContainer/PanelContainer/Content/ScenarioLabel
 @onready var instruction_label: Label = $Interface/MarginContainer/PanelContainer/Content/InstructionLabel
 @onready var stats_label: Label = $Interface/MarginContainer/PanelContainer/Content/StatsLabel
+@onready var hud: MarginContainer = $Interface/MarginContainer
 @onready var end_game_overlay: ColorRect = $Interface/EndGameOverlay
 @onready var final_time_label: Label = $Interface/EndGameOverlay/ResultsPanel/ResultsContent/FinalTimeLabel
 @onready var qualification_label: Label = $Interface/EndGameOverlay/ResultsPanel/ResultsContent/QualificationLabel
@@ -22,6 +23,8 @@ const TRANSITIONS_TO_WIN := 10
 @onready var validation_label: Label = $Interface/EndGameOverlay/ResultsPanel/ResultsContent/ValidationLabel
 @onready var leaderboard_label: Label = $Interface/EndGameOverlay/ResultsPanel/ResultsContent/LeaderboardLabel
 @onready var restart_button: Button = $Interface/EndGameOverlay/ResultsPanel/ResultsContent/RestartButton
+@onready var start_overlay: ColorRect = $Interface/StartOverlay
+@onready var play_button: Button = $Interface/StartOverlay/StartPanel/StartMargin/StartContent/PlayButton
 
 var current_scenario: BaseScenario
 var current_scenario_index := 0
@@ -43,8 +46,9 @@ func _ready() -> void:
     initials_input.text_changed.connect(_on_initials_text_changed)
     initials_input.text_submitted.connect(_on_initials_text_submitted)
     submit_score_button.pressed.connect(_submit_score)
-    restart_button.pressed.connect(_start_new_game)
-    _start_new_game()
+    restart_button.pressed.connect(_show_start_screen)
+    play_button.pressed.connect(_start_new_game)
+    _show_start_screen()
 
 
 func _process(_delta: float) -> void:
@@ -58,13 +62,29 @@ func _start_new_game() -> void:
     game_running = true
     is_changing_scenario = false
     scenario_bag.clear()
+    start_overlay.hide()
     end_game_overlay.hide()
+    hud.show()
+    player.show()
     initials_input.release_focus()
     initials_input.text = ""
     player.set_movement_enabled(true)
     _load_scenario(0)
     session_start_msec = Time.get_ticks_msec()
     _update_stats_label()
+
+
+func _show_start_screen() -> void:
+    game_running = false
+    is_changing_scenario = false
+    player.set_movement_enabled(false)
+    player.set_space_helmet_visible(false)
+    player.hide()
+    hud.hide()
+    end_game_overlay.hide()
+    initials_input.release_focus()
+    start_overlay.show()
+    play_button.grab_focus()
 
 
 func _load_scenario(scenario_index: int) -> void:
@@ -163,6 +183,8 @@ func _submit_score() -> void:
     initials_row.hide()
     restart_button.show()
     _update_leaderboard_label()
+    await get_tree().create_timer(0.9).timeout
+    _show_start_screen()
 
 
 func _sanitize_initials(value: String) -> String:

@@ -1,10 +1,17 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3]
 [ext_resource type="Script" path="res://scripts/main_scene.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/player_accessories.gd" id="3_accessories"]
+[ext_resource type="Script" path="res://scripts/player_visual_controller.gd" id="4_visual_controller"]
+[ext_resource type="Script" path="res://scripts/player_shadow.gd" id="5_shadow"]
+[ext_resource type="Texture2D" path="res://assets/characters/dog/spritesheets/dog_walk_v2.png" id="6_bruce_sheet"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bruce_cover"]
+atlas = ExtResource("6_bruce_sheet")
+region = Rect2(0, 0, 313, 313)
 
 [node name="MainScene" type="Node2D"]
 script = ExtResource("1_main")
@@ -13,16 +20,24 @@ script = ExtResource("1_main")
 position = Vector2(320, 260)
 script = ExtResource("1_player")
 
-[node name="DogSprite" type="Sprite2D" parent="Player"]
-z_index = 10
-position = Vector2(0, -2)
-scale = Vector2(0.1, 0.1)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
 shape = SubResource("RectangleShape2D_player")
 
-[node name="Accessories" type="Node2D" parent="Player"]
-z_index = 11
+[node name="Shadow" type="Node2D" parent="Player"]
+z_index = 9
+position = Vector2(0, 38)
+script = ExtResource("5_shadow")
+
+[node name="VisualRoot" type="Node2D" parent="Player"]
+z_index = 10
+script = ExtResource("4_visual_controller")
+
+[node name="DogSprite" type="AnimatedSprite2D" parent="Player/VisualRoot"]
+position = Vector2(0, -2)
+scale = Vector2(0.4, 0.4)
+
+[node name="Accessories" type="Node2D" parent="Player/VisualRoot"]
+z_index = 1
 script = ExtResource("3_accessories")
 
 [node name="Interface" type="CanvasLayer" parent="."]
@@ -135,4 +150,89 @@ horizontal_alignment = 1
 
 [node name="RestartButton" type="Button" parent="Interface/EndGameOverlay/ResultsPanel/ResultsContent"]
 layout_mode = 2
-text = "JOGAR NOVAMENTE"
+text = "VOLTAR AO INICIO"
+
+[node name="StartOverlay" type="ColorRect" parent="Interface"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0352941, 0.109804, 0.137255, 1)
+
+[node name="AccentTop" type="ColorRect" parent="Interface/StartOverlay"]
+layout_mode = 0
+anchor_right = 1.0
+offset_bottom = 8.0
+grow_horizontal = 2
+color = Color(0.988235, 0.729412, 0.247059, 1)
+
+[node name="StartPanel" type="PanelContainer" parent="Interface/StartOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -245.0
+offset_top = -215.0
+offset_right = 245.0
+offset_bottom = 215.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StartMargin" type="MarginContainer" parent="Interface/StartOverlay/StartPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 18
+
+[node name="StartContent" type="VBoxContainer" parent="Interface/StartOverlay/StartPanel/StartMargin"]
+layout_mode = 2
+theme_override_constants/separation = 7
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.866667, 0.368627, 1)
+theme_override_font_sizes/font_size = 34
+text = "Where can Bruce pee?"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.741176, 0.898039, 0.929412, 1)
+theme_override_font_sizes/font_size = 15
+text = "A tiny arcade adventure"
+horizontal_alignment = 1
+
+[node name="BruceFrame" type="CenterContainer" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
+custom_minimum_size = Vector2(0, 205)
+layout_mode = 2
+
+[node name="BruceImage" type="TextureRect" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent/BruceFrame"]
+custom_minimum_size = Vector2(205, 205)
+layout_mode = 2
+texture = SubResource("AtlasTexture_bruce_cover")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TaglineLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
+layout_mode = 2
+text = "Find the perfect spot in 10 different stops!"
+horizontal_alignment = 1
+
+[node name="PlayButton" type="Button" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
+custom_minimum_size = Vector2(180, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "PLAY"
+
+[node name="ControlsLabel" type="Label" parent="Interface/StartOverlay/StartPanel/StartMargin/StartContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.690196, 0.756863, 0.788235, 1)
+theme_override_font_sizes/font_size = 13
+text = "Use the arrow keys to move"
+horizontal_alignment = 1

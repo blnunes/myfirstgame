@@ -20,3 +20,7 @@ A game lasts for 10 targets. The final time can enter a persistent Top 10 leader
 3. Run the project.
 
 Use the arrow keys to move. See `AGENTS.md` for architecture, extension guidance, and the manual validation checklist.
+
+The dog uses a generated four-direction pixel-art sprite sheet based on a black, fluffy spitz character, with real leg and body walk cycles. Smooth acceleration, subtle procedural bob, tilt, squash and stretch, direction flipping, and a responsive ground shadow polish the animation. No external animation software is required for the current version.
+
+The game opens on the **Where can Bruce pee?** title screen. Gameplay and the timer begin only after pressing **PLAY**. Saving a Top 10 score returns the player to the title screen.
