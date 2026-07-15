@@ -46,7 +46,6 @@ func _update_directional_animation(movement_strength: float) -> void:
     if movement_strength < 0.03:
         if dog_sprite.is_playing():
             dog_sprite.pause()
-            dog_sprite.set_frame_and_progress(0, 0.0)
         return
 
     if absf(motion_velocity.x) > absf(motion_velocity.y):
@@ -65,7 +64,15 @@ func _update_directional_animation(movement_strength: float) -> void:
     var animation_name := "walk_%s" % current_direction
     if dog_sprite.sprite_frames.has_animation(animation_name):
         if dog_sprite.animation != animation_name:
-            dog_sprite.play(animation_name)
+            var preserved_frame := dog_sprite.frame
+            var preserved_progress := dog_sprite.frame_progress
+            var frame_count := dog_sprite.sprite_frames.get_frame_count(animation_name)
+            dog_sprite.animation = animation_name
+            dog_sprite.set_frame_and_progress(
+                preserved_frame % maxi(frame_count, 1),
+                preserved_progress
+            )
+            dog_sprite.play()
         elif not dog_sprite.is_playing():
             dog_sprite.play()
         dog_sprite.speed_scale = lerpf(0.72, 1.18, movement_strength)

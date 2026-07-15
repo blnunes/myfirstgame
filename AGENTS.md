@@ -35,7 +35,8 @@ myfirstgame/
 │   ├── dog_source.png
 │   └── dog/spritesheets/
 │       ├── dog_walk_v1.png             # skin GOLDEN
-│       └── dog_walk_v2.png             # skin MIDNIGHT
+│       ├── dog_walk_v2.png             # MIDNIGHT anterior, preservada
+│       └── dog_walk_midnight_v3.png    # skin MIDNIGHT ativa
 └── scripts/
     ├── main_scene.gd
     ├── leaderboard_store.gd
@@ -205,7 +206,9 @@ Depois de mover e aplicar limites, `player.gd` envia `velocity` e `speed` a `Vis
 - `walk_down`: vista frontal/para baixo;
 - `walk_side`: vista lateral direita; `flip_h` produz a esquerda;
 - `walk_up`: vista traseira/para cima;
-- abaixo de `3%` da velocidade máxima, pausa no frame `0` da direção atual.
+- abaixo de `3%` da velocidade máxima, pausa no frame e no progresso atuais; ao retomar, continua a passada desse ponto.
+
+Ao trocar entre `walk_side`, `walk_down` e `walk_up`, o controlador preserva `frame` e `frame_progress` na nova animação. Isso mantém a fase das patas contínua ao fazer curvas. Não reintroduza `set_frame_and_progress(0, 0)` no idle nem use `play(nome)` diretamente numa troca de direção, pois ambos recriam o efeito visual de reset denunciado pelo usuário.
 
 Sobre os frames reais, aplica acabamento sutil:
 
@@ -236,10 +239,12 @@ Novas aparências contextuais devem ficar nesse componente ou em componentes irm
 
 As duas skins são jogáveis e usam sheets RGBA de `1252 x 1252`, em grade exata `4 x 4` com células `313 x 313`. `player.gd::_load_dog_animations()` carrega o caminho da skin como `Texture2D`, cria `AtlasTexture` para cada frame e monta `SpriteFrames` em runtime.
 
-- `MIDNIGHT`: `dog_walk_v2.png`, cão preto/cinza em pixel art, linha lateral direita `2`;
+- `MIDNIGHT`: `dog_walk_midnight_v3.png`, cão preto/cinza em pixel art, linha lateral direita `1`;
 - `GOLDEN`: `dog_walk_v1.png`, cão dourado ilustrado, linha lateral direita `1`.
 
 Ambos usam linha frontal `0` e traseira `3`. `PlayerSkin.animation_rows` resolve a diferença lateral; não volte a usar uma constante global de linhas. A lateral direita é espelhada com `flip_h` para produzir a esquerda.
+
+Na `MIDNIGHT` v3, cada direção segue quatro fases: contato A, passagem A, contato B oposto e passagem B. Nas laterais, a pata dianteira próxima lidera no contato A e recolhe enquanto a distante lidera no contato B; as traseiras fazem a oposição diagonal. Na linha traseira, a perna longa alterna explicitamente entre os lados. A linha frontal também alterna os contatos, mas preserva a leitura da versão anterior.
 
 As animações usam `8 FPS`, ajustados em runtime entre `72%` e `118%` conforme a velocidade. As vistas frontal e traseira usam escala `0,4`; a lateral usa `0,47` para compensar a ocupação dentro da célula.
 
@@ -284,7 +289,7 @@ Não crie `Area2D` de interação nem duplique cálculo de distância, filtro do
 9. Confirmar que CITY, DESERT e SPACE aparecem uma vez durante as três primeiras transições, sem repetição imediata.
 10. Confirmar capacete apenas em SPACE.
 11. Confirmar movimento real das patas nas quatro direções, vista frontal ao descer, traseira ao subir e espelhamento ao andar à esquerda.
-12. Confirmar que idle pausa o sheet sem remover respiração, sombra ou direção atual.
+12. Soltar o movimento no meio de uma passada e confirmar que idle conserva o quadro/progresso; retomar e virar para outra direção sem voltar ao contato inicial.
 13. Confirmar que o cão nasce em posições variadas e visualmente distante do alvo em cada mapa.
 14. Permanecer parado próximo ao limite de ativação; a troca só deve ocorrer ao cruzá-lo em movimento.
 15. Confirmar que não há ativação automática ao entrar em um mapa nem duas transições ao permanecer sobre o alvo.
@@ -321,7 +326,8 @@ O headless de três frames valida carregamento e `_ready()`, mas agora permanece
 
 - O fallback manual de `dog.png` não é seguro para export; o fluxo principal com os dois sheets usa o importador normal e deve ser incluído em testes de export.
 - Os sheets têm quatro frames por direção, não possuem diagonais dedicadas e usam espelhamento na lateral esquerda. O código escolhe a direção dominante para movimentos diagonais.
-- `tests/dog_animation_smoke_test.gd` cobre seleção direcional, avanço de frame e flip; `tests/start_screen_smoke_test.gd` cobre seletor por teclado, aplicação de `GOLDEN`, sua linha lateral, `PLAY`, um salvamento controlado e retorno à capa. Ainda não existem testes automatizados completos para seleção de cenários, distância/spawn ou todos os casos de `LeaderboardStore`.
+- `GOLDEN` ainda usa o sheet original `dog_walk_v1.png`, cuja alternância de patas é menos pronunciada. A correção anatômica deste turno foi aplicada somente à `MIDNIGHT`, por solicitação explícita; trate `GOLDEN` separadamente em trabalho futuro.
+- `tests/dog_animation_smoke_test.gd` cobre seleção direcional, avanço de frame, flip e preservação da fase da passada no idle/troca de direção; `tests/start_screen_smoke_test.gd` cobre seletor por teclado, aplicação de `GOLDEN`, sua linha lateral, `PLAY`, um salvamento controlado e retorno à capa. Ainda não existem testes automatizados completos para seleção de cenários, distância/spawn ou todos os casos de `LeaderboardStore`.
 - O áudio e todos os cenários são desenhados ou sintetizados por código; crescer o mapa pode justificar cenas reutilizáveis, Resources de configuração ou TileMap.
 - A interface mistura textos em inglês dos cenários com textos em português no HUD e na tela final.
 - Não existe opção na UI para limpar o Top 10.
