@@ -15,7 +15,7 @@ Cada cenário fornece um alvo diferente:
 
 Uma partida termina ao alcançar 10 alvos. O HUD mostra progresso e cronômetro; o tempo para imediatamente no décimo alvo. Se o resultado entrar entre os 10 menores tempos, o jogador informa exatamente três iniciais `A-Z`. O ranking é persistido entre execuções em `user://leaderboard.json`. Números, espaços, acentos e caracteres especiais não são aceitos.
 
-O projeto abre na tela de título **Where can Bruce pee?**, com seletor de skin. As setas esquerda/direita do teclado ou os botões `<` e `>` alternam entre `MIDNIGHT` (cão preto) e `GOLDEN` (cão dourado); a capa usa um quadro frontal da opção atual. O mapa, jogador e cronômetro só começam depois de `PLAY`, que aplica a skin selecionada. Após salvar um resultado no Top 10, a confirmação permanece por `0,9 s` e o fluxo retorna automaticamente à tela inicial preservando a seleção. Um resultado que não classifica oferece `VOLTAR AO INICIO`.
+O projeto abre na tela de título **Where can Bruce pee?**, com seletor de skin. As setas esquerda/direita do teclado ou os botões `<` e `>` alternam entre `MIDNIGHT` (cão preto), `GOLDEN` (cão dourado) e `DAPPLE` (cão salsicha malhado); a capa usa um quadro frontal da opção atual. O mapa, jogador e cronômetro só começam depois de `PLAY`, que aplica a skin selecionada. Após salvar um resultado no Top 10, a confirmação permanece por `0,9 s` e o fluxo retorna automaticamente à tela inicial preservando a seleção. Um resultado que não classifica oferece `VOLTAR AO INICIO`.
 
 Ao tocar em cada alvo, o movimento é pausado brevemente, o efeito de xixi e um som são reproduzidos e um cenário diferente é escolhido aleatoriamente. O alvo também ocupa uma das posições candidatas aleatórias do novo cenário. No espaço, uma camada visual adiciona um capacete somente ao redor da cabeça do cão.
 
@@ -30,12 +30,20 @@ myfirstgame/
 ├── MainScene.tscn
 ├── project.godot
 ├── README.md
+├── docs/
+│   └── CHARACTER_SPRITE_PIPELINE.md  # padrão proposto para produzir e integrar skins em escala
+├── tools/
+│   └── normalize_character_sheet.py  # recentraliza 16 poses com margem segura
 ├── assets/characters/
 │   ├── dog.png
 │   ├── dog_source.png
-│   └── dog/spritesheets/
-│       ├── dog_walk_golden.png         # skin GOLDEN ativa, fornecida pelo usuário
-│       └── dog_walk_midnight_v3.png    # skin MIDNIGHT ativa
+│   └── dog/
+│       ├── sources/
+│       │   └── dog_dapple_reference.png # referência original da skin DAPPLE
+│       └── spritesheets/
+│           ├── dog_walk_dapple.png      # skin DAPPLE ativa
+│           ├── dog_walk_golden.png      # skin GOLDEN ativa, fornecida pelo usuário
+│           └── dog_walk_midnight_v3.png # skin MIDNIGHT ativa
 └── scripts/
     ├── main_scene.gd
     ├── leaderboard_store.gd
@@ -198,6 +206,8 @@ Depois de mover e aplicar limites, `player.gd` envia `velocity` e `speed` a `Vis
 
 `PlayerSkin` é o objeto de configuração consumido pela interface e pelo jogador: `id`, nome exibido, caminho do sheet, dicionário de linhas de animação e célula usada na capa. `PlayerSkinCatalog.create_skins()` é a fonte única da lista e da ordem do seletor. Para adicionar uma skin compatível, acrescente uma entrada ao catálogo; não duplique condições em `main_scene.gd` ou `player.gd`.
 
+O processo recomendado para escalar a produção e a integração até 100 personagens está documentado em `docs/CHARACTER_SPRITE_PIPELINE.md`. O documento diferencia referência, sheet gerado e sheet de runtime; também propõe ferramentas determinísticas de preparação/validação e a futura migração do catálogo para `Resource`. Essas ferramentas e a carga automática ainda não foram implementadas, portanto não presuma que os comandos propostos já existam.
+
 ### `player_visual_controller.gd`: animação direcional e acabamento procedural
 
 `VisualRoot` seleciona a animação pela direção dominante de `velocity`:
@@ -236,18 +246,21 @@ Novas aparências contextuais devem ficar nesse componente ou em componentes irm
 
 ## Sprites e skins do cão
 
-As duas skins são jogáveis e usam sheets RGBA de `1252 x 1252`, em grade exata `4 x 4` com células `313 x 313`. `player.gd::_load_dog_animations()` carrega o caminho da skin como `Texture2D`, cria `AtlasTexture` para cada frame e monta `SpriteFrames` em runtime.
+As três skins são jogáveis e usam sheets RGBA de `1252 x 1252`, em grade exata `4 x 4` com células `313 x 313`. `player.gd::_load_dog_animations()` carrega o caminho da skin como `Texture2D`, cria `AtlasTexture` para cada frame e monta `SpriteFrames` em runtime.
 
-O diretório de spritesheets contém somente as duas versões ativas. Versões intermediárias antigas foram removidas para evitar assets órfãos e importações desnecessárias; o histórico continua disponível no Git quando aplicável.
+O diretório de spritesheets contém somente as três versões ativas. Versões intermediárias antigas foram removidas para evitar assets órfãos e importações desnecessárias; o histórico continua disponível no Git quando aplicável.
 
 - `MIDNIGHT`: `dog_walk_midnight_v3.png`, cão preto/cinza em pixel art, linha lateral direita `1`;
 - `GOLDEN`: `dog_walk_golden.png`, cão dourado ilustrado, linha lateral direita `1`.
+- `DAPPLE`: `dog_walk_dapple.png`, cão salsicha marrom malhado em pixel art, linha lateral direita `1`.
 
-Ambos usam linha frontal `0` e traseira `3`. `PlayerSkin.animation_rows` resolve a diferença lateral; não volte a usar uma constante global de linhas. A lateral direita é espelhada com `flip_h` para produzir a esquerda.
+Todos usam linha frontal `0` e traseira `3`. `PlayerSkin.animation_rows` resolve a diferença lateral; não volte a usar uma constante global de linhas. A lateral direita é espelhada com `flip_h` para produzir a esquerda.
 
 Na `MIDNIGHT` v3, cada direção segue quatro fases: contato A, passagem A, contato B oposto e passagem B. Nas laterais, a pata dianteira próxima lidera no contato A e recolhe enquanto a distante lidera no contato B; as traseiras fazem a oposição diagonal. Na linha traseira, a perna longa alterna explicitamente entre os lados. A linha frontal também alterna os contatos, mas preserva a leitura da versão anterior.
 
 A `GOLDEN` deriva do arquivo explicitamente fornecido pelo usuário em `/Users/brunonunes/Downloads/User attachment.png`. A edição preservou o desenho, a paleta, a ordem e as direções das 16 poses, removeu o quadriculado claro incorporado ao RGB, completou os trechos cortados na última linha e realinhou os quadros sobre transparência real. Um pixel de cada borda foi recortado para converter `1254 x 1254` em uma grade exata `1252 x 1252`. As quatro linhas permanecem organizadas como frente, direita, esquerda e costas. O jogo usa a linha direita `1` e aplica `flip_h` para andar à esquerda; a linha esquerda `2` permanece armazenada como referência no sheet. O nome estável `dog_walk_golden.png` evita criar novas versões intermediárias no repositório.
+
+A `DAPPLE` foi gerada a partir de `dog_dapple_reference.png` seguindo `docs/CHARACTER_SPRITE_PIPELINE.md`. O gerador produziu as 16 poses sobre chroma verde uniforme; o processamento local removeu somente o fundo, criou transparência RGBA real e recortou um pixel de cada borda para normalizar `1254 x 1254` em `1252 x 1252`. Como algumas poses atravessavam as divisões da grade, `tools/normalize_character_sheet.py` detectou e reposicionou os 16 componentes sem alterar seus pixels, garantindo pelo menos `12 px` transparentes em cada lado da célula. O sheet preserva frente, direita, esquerda e costas nas linhas `0..3`; o jogo consome as linhas `0`, `1` e `3`.
 
 As animações usam `8 FPS`, ajustados em runtime entre `72%` e `118%` conforme a velocidade. As vistas frontal e traseira usam escala `0,4`; a lateral usa `0,47` para compensar a ocupação dentro da célula.
 
@@ -283,7 +296,7 @@ Não crie `Area2D` de interação nem duplique cálculo de distância, filtro do
 
 1. Abrir `MainScene.tscn` no Godot 4.7 sem erros de parse.
 2. Executar em proporção `4:3` e confirmar a capa **Where can Bruce pee?**, o seletor `MIDNIGHT`, as duas setas e o botão `PLAY`.
-3. Usar setas esquerda/direita e botões `<`/`>` para alternar `MIDNIGHT` e `GOLDEN`; conferir nome e capa, escolher cada skin em partidas separadas e confirmar o sheet correto.
+3. Usar setas esquerda/direita e botões `<`/`>` para alternar `MIDNIGHT`, `GOLDEN` e `DAPPLE`; conferir nome e capa, escolher cada skin em partidas separadas e confirmar o sheet correto.
 4. Antes de `PLAY`, confirmar jogador, HUD e cronômetro inativos; clicar em `PLAY` e confirmar início em `FOREST`.
 5. Confirmar sprite, HUD, cronômetro, contador `00/10` e árvore destacada; testar setas, diagonais e quatro limites.
 6. Tocar na árvore e conferir efeito, som, mensagem e troca após `0,7 s`.
@@ -323,13 +336,13 @@ O segundo comando, o smoke test direcional e o teste do fluxo da capa já execut
 
 Não considere esse aviso como erro de parse. Um aviso de `Image.load_from_file()` no caminho normal indica que o sheet falhou e o fallback estático foi usado; investigue o importador. Qualquer backtrace GDScript, erro de nó inexistente, falha em `assert` ou exit code diferente de `0` também precisa ser investigado. Sem `HOME` temporário, o Godot pode falhar ao criar `user://logs` ou tentar gravar settings fora do sandbox.
 
-O headless de três frames valida carregamento e `_ready()`, mas agora permanece corretamente na tela inicial. `start_screen_smoke_test.gd` cobre bloqueio inicial, troca por seta, aplicação de `GOLDEN`, suas linhas lateral/frontal/traseira, dimensões da grade, transparência dos cantos, frames distintos e cobertura plausível dos 16 desenhos, `PLAY`, salvamento e retorno à capa. Ele não cobre visualmente o layout, troca de cenário nem as dez aproximações reais; mantenha o checklist manual.
+O headless de três frames valida carregamento e `_ready()`, mas agora permanece corretamente na tela inicial. `start_screen_smoke_test.gd` cobre bloqueio inicial, seleção de `GOLDEN` e `DAPPLE`, aplicação de `DAPPLE`, suas linhas lateral/frontal/traseira, dimensões da grade, transparência dos cantos, frames distintos e cobertura plausível dos sheets, `PLAY`, salvamento e retorno à capa. Ele não cobre visualmente o layout, troca de cenário nem as dez aproximações reais; mantenha o checklist manual.
 
 ## Problemas conhecidos e dívida técnica
 
 - O fallback manual de `dog.png` não é seguro para export; o fluxo principal com os dois sheets usa o importador normal e deve ser incluído em testes de export.
 - Os sheets têm quatro frames por direção, não possuem diagonais dedicadas e usam espelhamento na lateral esquerda. O código escolhe a direção dominante para movimentos diagonais.
-- `tests/dog_animation_smoke_test.gd` cobre seleção direcional, avanço de frame, flip e preservação da fase da passada no idle/troca de direção; `tests/start_screen_smoke_test.gd` cobre seletor por teclado, aplicação de `GOLDEN`, linhas lateral/frontal/traseira, integridade e transparência do sheet fornecido pelo usuário, `PLAY`, um salvamento controlado e retorno à capa. Ainda não existem testes automatizados completos para seleção de cenários, distância/spawn ou todos os casos de `LeaderboardStore`.
+- `tests/dog_animation_smoke_test.gd` cobre seleção direcional, avanço de frame, flip e preservação da fase da passada no idle/troca de direção; `tests/start_screen_smoke_test.gd` cobre seletor por teclado, aplicação de `DAPPLE`, linhas lateral/frontal/traseira, integridade e transparência dos sheets `GOLDEN` e `DAPPLE`, `PLAY`, um salvamento controlado e retorno à capa. Ainda não existem testes automatizados completos para seleção de cenários, distância/spawn ou todos os casos de `LeaderboardStore`.
 - O áudio e todos os cenários são desenhados ou sintetizados por código; crescer o mapa pode justificar cenas reutilizáveis, Resources de configuração ou TileMap.
 - A interface mistura textos em inglês dos cenários com textos em português no HUD e na tela final.
 - Não existe opção na UI para limpar o Top 10.
@@ -351,3 +364,5 @@ O headless de três frames valida carregamento e `_ready()`, mas agora permanece
 - Não aplique bob diretamente ao nó `Player`, pois isso moveria o corpo físico e afetaria a detecção de distância. Animações cosméticas pertencem a `VisualRoot`.
 - Não volte a iniciar a partida diretamente em `_ready()`: `_show_start_screen()` deve manter jogador e HUD inativos até o sinal de `PlayButton`.
 - Ao adicionar ou substituir uma skin, preserve grade `4 x 4`, dimensões divisíveis por quatro, transparência e padding; declare caminho, linha frontal/lateral/traseira e quadro de capa em `PlayerSkinCatalog`.
+- Antes de produzir skins em lote, siga `docs/CHARACTER_SPRITE_PIPELINE.md`; não use scripts de imagem para inventar ou trocar anatomia e não adicione arquivos versionados `v2`, `v3` quando o Git puder preservar o histórico.
+- Para skins novas, exija `12 px` transparentes nos quatro lados de cada célula `313 x 313`. Use `tools/normalize_character_sheet.py` quando as 16 poses estiverem corretas, mas desalinhadas; o script deve falhar se não encontrar exatamente 16 componentes ou se algum ultrapassar `289 x 289`.
